@@ -6,10 +6,18 @@ exports.__esModule = true;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Game = (function () {
-  function Game() {
+  function Game(config) {
     _classCallCheck(this, Game);
 
-    console.log('constructor time!!');
+    this.blocks = $('li');
+    this.turns = 0;
+    this.numRows = config.numRows;
+    this.numColumns = config.numColumns;
+    this.gravity = config.gravity;
+
+    $('ul').click(function (e) {
+      console.log('click', e.target.id);
+    });
   }
 
   Game.prototype.init = function init() {};
@@ -25,8 +33,12 @@ exports.Game = Game;
 var _game = require('./game');
 
 var init = function init() {
-  console.log('hi init');
-  var game = new _game.Game();
+  var config = {
+    numRows: 3,
+    numColumns: 3,
+    gravity: false
+  };
+  new _game.Game(config);
 };
 
 init();
