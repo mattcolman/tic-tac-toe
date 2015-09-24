@@ -1,13 +1,11 @@
-import {sum,square,variable,MyClass} from './import';
+import {Game} from './game';
 
-console.log(square(5)); //25
+var init = function() {
+  console.log('hi init')
+  let game = new Game()
 
-var cred={
-    name:'Ritesh Kumar',
-    enrollmentNo:11115078
 }
 
-var x = new MyClass(cred);
-console.log(x.getName());
+init()
 
 

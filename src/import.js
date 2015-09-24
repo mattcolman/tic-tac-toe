@@ -7,6 +7,7 @@ var square = (b)=> {
 
 var variable = 9;
 
+
 class MyClass{
     constructor(credentials){
         this.name = credentials.name;
