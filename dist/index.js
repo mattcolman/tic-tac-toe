@@ -5,29 +5,280 @@ exports.__esModule = true;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var _grid = require('./grid');
+
 var Game = (function () {
   function Game(config) {
     _classCallCheck(this, Game);
 
     this.blocks = $('li');
-    this.turns = 0;
+    this.turn = 0;
     this.numRows = config.numRows;
     this.numColumns = config.numColumns;
+    this.numTurns = this.numRows * this.numColumns;
     this.gravity = config.gravity;
+    this.players = [{ name: 'Player 1', symbol: 'x' }, { name: 'Player 2', symbol: 'o' }];
+
+    this.addGrid();
+    this.addClick();
+  }
+
+  Game.prototype.addGrid = function addGrid() {
+    this.grid = new _grid.Grid(this.numColumns, this.numRows);
+    this.grid.compare = function (a, b) {
+      if (!a || !b) return false;
+      return a.innerHTML == b.innerHTML;
+    };
+
+    var lis = $('li');
+    lis = Array.from(lis); // convert array-like to array
+    for (var _iterator = lis, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var li = _ref;
+
+      var _li$id$split = li.id.split(',');
+
+      var x = _li$id$split[0];
+      var y = _li$id$split[1];
+
+      this.grid.setItem(x, y, li);
+    }
+  };
+
+  Game.prototype.addClick = function addClick() {
+    var _this = this;
 
     $('ul').click(function (e) {
       console.log('click', e.target.id);
-    });
-  }
+      var symbol = _this.players[_this.turn % 2].symbol;
+      e.target.className = symbol;
+      e.target.innerHTML = symbol;
 
-  Game.prototype.init = function init() {};
+      var _e$target$id$split = e.target.id.split(',');
+
+      var x = _e$target$id$split[0];
+      var y = _e$target$id$split[1];
+
+      x = parseInt(x);
+      y = parseInt(y);
+      if (_this.findMatches(x, y)) {
+        console.log('match!');
+      } else {
+        console.log('no match!');
+        if (++_this.turn >= _this.numTurns) {
+          _this.gameOver();
+        }
+      }
+    });
+  };
+
+  Game.prototype.findMatches = function findMatches(x, y) {
+    return this.grid.findMatches(x, y, ['n', 's'], 3) || this.grid.findMatches(x, y, ['e', 'w'], 3) || this.grid.findMatches(x, y, ['ne', 'sw'], 3) || this.grid.findMatches(x, y, ['nw', 'se'], 3);
+  };
+
+  Game.prototype.gameOver = function gameOver() {
+    console.log('game over man!');
+  };
 
   return Game;
 })();
 
 exports.Game = Game;
 
-},{}],2:[function(require,module,exports){
+},{"./grid":2}],2:[function(require,module,exports){
+/**
+ * @author Matt Colman
+ * This is a generic 2d Grid class.
+ * It allows you to set an item to a grid position,
+ * get an item from a grid position,
+ * compare 2 items in the grid and
+ * find consecutive matches from a start point in
+ * a directional line.
+ */
+
+'use strict';
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Grid = (function () {
+
+  /**
+   * Constructor
+   * @param  {Int} columns   number of columns in the grid
+   * @param  {Int} rows      number of rows in the grid
+   * @return {Grid}
+   */
+
+  function Grid(columns, rows) {
+    _classCallCheck(this, Grid);
+
+    this.pos = [];
+    for (var i = 0; i < columns; i++) {
+      var a = [];
+      this.pos.push(a);
+      for (var j = 0; j < rows; j++) {
+        a.push([]);
+      }
+    }
+
+    this.directions = {
+      'n': [0, -1],
+      'e': [1, 0],
+      's': [0, 1],
+      'w': [-1, 0]
+    };
+  }
+
+  /**
+   * Set an item to the grid
+   * @public
+   * @param {Int} x    x position in the grid
+   * @param {Int} y    y position in the grid
+   * @param {Object}   the item stored in the grid
+   */
+
+  Grid.prototype.setItem = function setItem(x, y, item) {
+    this.pos[x][y] = item;
+  };
+
+  /**
+   * Get an item from the grid
+   * @public
+   * @param  {Int} x   x position in the grid
+   * @param  {Int} y   y position in the grid
+   * @return {*}   GridItem
+   */
+
+  Grid.prototype.getItem = function getItem(x, y) {
+    if (this.pos[x]) return this.pos[x][y];
+    return undefined;
+  };
+
+  /**
+   * Compare method
+   * @public
+   * @param  {*} a ItemA
+   * @param  {*} b ItemB
+   * @return {Boolean}   A boolean to determine if a and b are a match
+   * @note - Override me if you need a custom compare method.
+   */
+
+  Grid.prototype.compare = function compare(a, b) {
+    return a == b;
+  };
+
+  /**
+   * Finds all matches from an array of directions
+   * @public
+   * @param  {Int} x            x position in the grid
+   * @param  {Int} y            y position in the grid
+   * @param  {Array} directions a list of directions to include in the search
+   * @param  {Int} min          Minimum allowed matches. If under the minimum will return null.
+   * @return {Array}            Array of matches.
+   */
+
+  Grid.prototype.findMatches = function findMatches(x, y, directions, min) {
+    var a = this.getItem(x, y);
+    var matches = [a];
+    for (var _iterator = directions, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var str = _ref;
+
+      var direction = this._parseDirection(str);
+      matches = matches.concat(this.findMatchByDirection(x, y, direction));
+    }
+
+    if (matches.length >= min) {
+      return matches;
+    } else {
+      return null;
+    }
+  };
+
+  /**
+   * Recursively returns all consecutive matches from an
+   * @public
+   * x, y grid position in a direction.
+   * @param  {Int} x            x position in the grid
+   * @param  {Int} y            y position in the grid
+   * @param  {Array} direction  a single direction of the search in Array form e.g [1, 1] goes SE
+   * @param  {Array} matches    used for the recursive result
+   * @return {Array}            Array of matches
+   */
+
+  Grid.prototype.findMatchByDirection = function findMatchByDirection(x, y, direction) {
+    var matches = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
+
+    var a = this.getItem(x, y);
+    x += direction[0];
+    y += direction[1];
+    var b = this.getItem(x, y);
+    if (this.compare(a, b)) {
+      matches.push(b);
+      return this.findMatchByDirection(x, y, direction, matches);
+    } else {
+      return matches;
+    }
+  };
+
+  /**
+   * converts a direction string into an Array
+   * @private
+   * @param  {String} str  e.g. 'ne'
+   * @return {Array}       e.g. [-1, 1]
+   */
+
+  Grid.prototype._parseDirection = function _parseDirection(str) {
+    var directions = str.split('');
+    var result = [0, 0];
+    for (var _iterator2 = directions, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var d = _ref2;
+
+      result[0] += this.directions[d][0];
+      result[1] += this.directions[d][1];
+    }
+    return result;
+  };
+
+  return Grid;
+})();
+
+exports.Grid = Grid;
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var _game = require('./game');
@@ -43,4 +294,4 @@ var init = function init() {
 
 init();
 
-},{"./game":1}]},{},[2]);
+},{"./game":1}]},{},[3]);
