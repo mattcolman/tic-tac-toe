@@ -1,12 +1,21 @@
 import {Game} from './game';
 
 var init = function() {
-  let config = {
+  let tictactoe = {
     numRows: 3,
     numColumns: 3,
+    matches: 3,
     gravity: false
   }
-  new Game(config)
+
+  let connect4 = {
+    numRows: 3,
+    numColumns: 3,
+    matches: 3,
+    gravity: true
+  }
+
+  new Game(connect4)
 }
 
 init()

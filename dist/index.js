@@ -11,10 +11,11 @@ var Game = (function () {
   function Game(config) {
     _classCallCheck(this, Game);
 
-    this.blocks = $('li');
+    this.blocks = Array.from($('li')); // convert array-like to array
     this.turn = 0;
     this.numRows = config.numRows;
     this.numColumns = config.numColumns;
+    this.numMatches = config.matches;
     this.numTurns = this.numRows * this.numColumns;
     this.gravity = config.gravity;
     this.players = [{ name: 'Player 1', symbol: 'x' }, { name: 'Player 2', symbol: 'o' }];
@@ -30,9 +31,7 @@ var Game = (function () {
       return a.innerHTML == b.innerHTML;
     };
 
-    var lis = $('li');
-    lis = Array.from(lis); // convert array-like to array
-    for (var _iterator = lis, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+    for (var _iterator = this.blocks, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
 
       if (_isArray) {
@@ -60,19 +59,33 @@ var Game = (function () {
 
     $('ul').click(function (e) {
       console.log('click', e.target.id);
-      var symbol = _this.players[_this.turn % 2].symbol;
-      e.target.className = symbol;
-      e.target.innerHTML = symbol;
+      var target = e.target;
 
-      var _e$target$id$split = e.target.id.split(',');
+      var _target$id$split = target.id.split(',');
 
-      var x = _e$target$id$split[0];
-      var y = _e$target$id$split[1];
+      var x = _target$id$split[0];
+      var y = _target$id$split[1];
 
+      var a = undefined;
       x = parseInt(x);
       y = parseInt(y);
+      if (_this.gravity) {
+        while (true) {
+          a = _this.grid.getItem(x, y + 1);
+          if (a && a.innerHTML == '') {
+            y++;
+            target = a;
+          } else {
+            break;
+          }
+        }
+      }
+      var symbol = _this.players[_this.turn % 2].symbol;
+      target.className = symbol;
+      target.innerHTML = symbol;
       if (_this.findMatches(x, y)) {
-        console.log('match!');
+        console.log('WIN!');
+        _this.handleWin();
       } else {
         console.log('no match!');
         if (++_this.turn >= _this.numTurns) {
@@ -83,11 +96,16 @@ var Game = (function () {
   };
 
   Game.prototype.findMatches = function findMatches(x, y) {
-    return this.grid.findMatches(x, y, ['n', 's'], 3) || this.grid.findMatches(x, y, ['e', 'w'], 3) || this.grid.findMatches(x, y, ['ne', 'sw'], 3) || this.grid.findMatches(x, y, ['nw', 'se'], 3);
+    return this.grid.findMatches(x, y, ['n', 's'], this.numMatches) || this.grid.findMatches(x, y, ['e', 'w'], this.numMatches) || this.grid.findMatches(x, y, ['ne', 'sw'], this.numMatches) || this.grid.findMatches(x, y, ['nw', 'se'], this.numMatches);
+  };
+
+  Game.prototype.handleWin = function handleWin() {
+    $('ul').off();
   };
 
   Game.prototype.gameOver = function gameOver() {
     console.log('game over man!');
+    $('ul').off();
   };
 
   return Game;
@@ -284,12 +302,21 @@ exports.Grid = Grid;
 var _game = require('./game');
 
 var init = function init() {
-  var config = {
+  var tictactoe = {
     numRows: 3,
     numColumns: 3,
+    matches: 3,
     gravity: false
   };
-  new _game.Game(config);
+
+  var connect4 = {
+    numRows: 3,
+    numColumns: 3,
+    matches: 3,
+    gravity: true
+  };
+
+  new _game.Game(connect4);
 };
 
 init();
