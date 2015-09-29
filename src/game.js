@@ -3,7 +3,6 @@ import {Grid} from './grid';
 class Game {
 
   constructor(config) {
-    this.blocks = Array.from($('li')) // convert array-like to array
     this.turn = 0
     this.numRows    = config.numRows
     this.numColumns = config.numColumns
@@ -15,8 +14,22 @@ class Game {
       {name: 'Player 2', symbol: 'o'}
     ]
 
+    this.createBlocks()
+    this.blocks = Array.from($('li')) // convert array-like to array
     this.addGrid()
     this.addClick()
+    $('#result').hide()
+  }
+
+  createBlocks() {
+    for (var j = 0; j < this.numRows; j++) {
+      for (var i = 0; i < this.numColumns; i++) {
+        let form = `<li id="${i},${j}"></li>`
+        form = $(form)
+        $('#game').append(form)
+      };
+    };
+    $('#game').width(this.numColumns*108)
   }
 
   addGrid() {
@@ -41,6 +54,8 @@ class Game {
       x = parseInt(x)
       y = parseInt(y)
       if (this.gravity) {
+        y = -1
+        target = null
         while (true) {
           a = this.grid.getItem(x, y+1)
           if (a && a.innerHTML == '') {
@@ -51,6 +66,9 @@ class Game {
           }
         }
       }
+
+      if (!target || target.innerHTML != '') return;
+
       let symbol = this.players[this.turn%2].symbol
       target.className = symbol
       target.innerHTML = symbol
@@ -76,11 +94,17 @@ class Game {
 
   handleWin() {
     $('ul').off()
+    let symbol = this.players[this.turn%2].symbol
+    $('#result').addClass(symbol)
+    $('#result').text(`${symbol.toUpperCase()} WINS!`)
+    $('#result').show()
   }
 
   gameOver() {
     console.log('game over man!')
     $('ul').off()
+    $('#result').text('DRAW!')
+    $('#result').show()
   }
 }
 

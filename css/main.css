@@ -1,6 +1,6 @@
 body {
     margin-top: 40px;
-    background: #485b6e;
+    background: #222222;
         color: #fff;
         font-family: Helvetica;
     font-weight: bold;
@@ -8,21 +8,17 @@ body {
 }
 
 h1 {
-    text-transform: uppercase;
     letter-spacing: 0.1em;
     color: #f1f1f1
-
 }
 
 .main {
     margin: 0 auto;
-    width: 400px;
 }
 
 #game {
-    width: 300px;
-    height: 300px;
-    border: 1px solid #dadada;
+    width: 324px;
+    height: 324px;
     margin: 0 auto;
     padding: 0;
     margin-bottom: 20px;
@@ -41,19 +37,20 @@ h1 {
     cursor: pointer;
     text-transform: uppercase;
     text-align: center;
-    padding-top: 20px;
+    margin: 4px;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
+    border-radius: 20px;
+    padding-top: 19px;
+    font-size: 50px;
 }
 
-#game > li.x {
-    font-size: 40px;
-    color: #ed4e6e
+.x {
+    color: #4c91d7;
 }
 
-#game > li.o {
-    font-size: 40px;
-    color: #485b6e;
+.o {
+    color: #51d33c;
 }
 
 #game > li:hover {

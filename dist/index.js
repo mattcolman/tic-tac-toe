@@ -11,7 +11,6 @@ var Game = (function () {
   function Game(config) {
     _classCallCheck(this, Game);
 
-    this.blocks = Array.from($('li')); // convert array-like to array
     this.turn = 0;
     this.numRows = config.numRows;
     this.numColumns = config.numColumns;
@@ -20,9 +19,23 @@ var Game = (function () {
     this.gravity = config.gravity;
     this.players = [{ name: 'Player 1', symbol: 'x' }, { name: 'Player 2', symbol: 'o' }];
 
+    this.createBlocks();
+    this.blocks = Array.from($('li')); // convert array-like to array
     this.addGrid();
     this.addClick();
+    $('#result').hide();
   }
+
+  Game.prototype.createBlocks = function createBlocks() {
+    for (var j = 0; j < this.numRows; j++) {
+      for (var i = 0; i < this.numColumns; i++) {
+        var form = '<li id="' + i + ',' + j + '"></li>';
+        form = $(form);
+        $('#game').append(form);
+      };
+    };
+    $('#game').width(this.numColumns * 108);
+  };
 
   Game.prototype.addGrid = function addGrid() {
     this.grid = new _grid.Grid(this.numColumns, this.numRows);
@@ -70,6 +83,8 @@ var Game = (function () {
       x = parseInt(x);
       y = parseInt(y);
       if (_this.gravity) {
+        y = -1;
+        target = null;
         while (true) {
           a = _this.grid.getItem(x, y + 1);
           if (a && a.innerHTML == '') {
@@ -80,6 +95,9 @@ var Game = (function () {
           }
         }
       }
+
+      if (!target || target.innerHTML != '') return;
+
       var symbol = _this.players[_this.turn % 2].symbol;
       target.className = symbol;
       target.innerHTML = symbol;
@@ -101,11 +119,17 @@ var Game = (function () {
 
   Game.prototype.handleWin = function handleWin() {
     $('ul').off();
+    var symbol = this.players[this.turn % 2].symbol;
+    $('#result').addClass(symbol);
+    $('#result').text(symbol.toUpperCase() + ' WINS!');
+    $('#result').show();
   };
 
   Game.prototype.gameOver = function gameOver() {
     console.log('game over man!');
     $('ul').off();
+    $('#result').text('DRAW!');
+    $('#result').show();
   };
 
   return Game;
@@ -310,9 +334,9 @@ var init = function init() {
   };
 
   var connect4 = {
-    numRows: 3,
-    numColumns: 3,
-    matches: 3,
+    numRows: 6,
+    numColumns: 7,
+    matches: 4,
     gravity: true
   };
 

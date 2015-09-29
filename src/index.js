@@ -9,9 +9,9 @@ var init = function() {
   }
 
   let connect4 = {
-    numRows: 3,
-    numColumns: 3,
-    matches: 3,
+    numRows: 6,
+    numColumns: 7,
+    matches: 4,
     gravity: true
   }
 
