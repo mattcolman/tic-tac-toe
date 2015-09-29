@@ -26,6 +26,11 @@ var Game = (function () {
     $('#result').hide();
   }
 
+  Game.prototype.destroy = function destroy() {
+    $('ul').off();
+    $('ul').empty();
+  };
+
   Game.prototype.createBlocks = function createBlocks() {
     for (var j = 0; j < this.numRows; j++) {
       for (var i = 0; i < this.numColumns; i++) {
@@ -328,21 +333,30 @@ exports.Grid = Grid;
 var _game = require('./game');
 
 var init = function init() {
-  var tictactoe = {
-    numRows: 3,
-    numColumns: 3,
-    matches: 3,
-    gravity: false
+  var gameTypes = {
+
+    tictactoe: {
+      numRows: 3,
+      numColumns: 3,
+      matches: 3,
+      gravity: false
+    },
+
+    connect4: {
+      numRows: 6,
+      numColumns: 7,
+      matches: 4,
+      gravity: true
+    }
   };
 
-  var connect4 = {
-    numRows: 6,
-    numColumns: 7,
-    matches: 4,
-    gravity: true
-  };
+  var game;
 
-  new _game.Game(connect4);
+  $('#buttons a').click(function (e) {
+    $('h1').text(e.currentTarget.innerHTML);
+    if (game) game.destroy();
+    game = new _game.Game(gameTypes[e.currentTarget.id]);
+  });
 };
 
 init();

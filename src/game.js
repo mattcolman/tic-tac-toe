@@ -21,6 +21,11 @@ class Game {
     $('#result').hide()
   }
 
+  destroy() {
+    $('ul').off()
+    $('ul').empty()
+  }
+
   createBlocks() {
     for (var j = 0; j < this.numRows; j++) {
       for (var i = 0; i < this.numColumns; i++) {
