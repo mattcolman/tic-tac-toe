@@ -34,7 +34,9 @@ var Game = (function () {
         $('#game').append(form);
       };
     };
-    $('#game').width(this.numColumns * 108);
+    var blockWidth = $("li").outerWidth(true);
+    $('#game').width(this.numColumns * blockWidth);
+    $('#game').height(this.numRows * blockWidth);
   };
 
   Game.prototype.addGrid = function addGrid() {

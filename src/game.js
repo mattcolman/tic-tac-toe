@@ -29,7 +29,9 @@ class Game {
         $('#game').append(form)
       };
     };
-    $('#game').width(this.numColumns*108)
+    let blockWidth = $("li").outerWidth(true)
+    $('#game').width(this.numColumns*blockWidth)
+    $('#game').height(this.numRows*blockWidth)
   }
 
   addGrid() {
