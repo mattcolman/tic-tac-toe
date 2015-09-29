@@ -78,46 +78,62 @@ var Game = (function () {
     var _this = this;
 
     $('ul').click(function (e) {
-      console.log('click', e.target.id);
       var target = e.target;
-
-      var _target$id$split = target.id.split(',');
-
-      var x = _target$id$split[0];
-      var y = _target$id$split[1];
-
       var a = undefined;
-      x = parseInt(x);
-      y = parseInt(y);
-      if (_this.gravity) {
-        y = -1;
-        target = null;
-        while (true) {
-          a = _this.grid.getItem(x, y + 1);
-          if (a && a.innerHTML == '') {
-            y++;
-            target = a;
-          } else {
-            break;
-          }
-        }
-      }
 
-      if (!target || target.innerHTML != '') return;
+      var _getXY = _this.getXY(target);
+
+      var x = _getXY[0];
+      var y = _getXY[1];
+
+      if (_this.gravity) target = _this.findNextBlockInColumn(x);
+      if (!_this.isVacant(target)) return;
 
       var symbol = _this.players[_this.turn % 2].symbol;
       target.className = symbol;
       target.innerHTML = symbol;
+
+      var _getXY2 = _this.getXY(target);
+
+      x = _getXY2[0];
+      y = _getXY2[1];
+
       if (_this.findMatches(x, y)) {
-        console.log('WIN!');
         _this.handleWin();
       } else {
-        console.log('no match!');
         if (++_this.turn >= _this.numTurns) {
           _this.gameOver();
         }
       }
     });
+  };
+
+  Game.prototype.getXY = function getXY(block) {
+    var _block$id$split = block.id.split(',');
+
+    var x = _block$id$split[0];
+    var y = _block$id$split[1];
+
+    return [parseInt(x), parseInt(y)];
+  };
+
+  Game.prototype.findNextBlockInColumn = function findNextBlockInColumn(x) {
+    var y = -1;
+    var block = undefined,
+        a = undefined;
+    while (true) {
+      a = this.grid.getItem(x, y + 1);
+      if (this.isVacant(a)) {
+        y++;
+        block = a;
+      } else {
+        return block;
+      }
+    }
+  };
+
+  Game.prototype.isVacant = function isVacant(block) {
+    return block && block.innerHTML == '';
   };
 
   Game.prototype.findMatches = function findMatches(x, y) {
@@ -127,13 +143,12 @@ var Game = (function () {
   Game.prototype.handleWin = function handleWin() {
     $('ul').off();
     var symbol = this.players[this.turn % 2].symbol;
-    $('#result').addClass(symbol);
+    $('#result')[0].className = symbol;
     $('#result').text(symbol.toUpperCase() + ' WINS!');
     $('#result').show();
   };
 
   Game.prototype.gameOver = function gameOver() {
-    console.log('game over man!');
     $('ul').off();
     $('#result').text('DRAW!');
     $('#result').show();

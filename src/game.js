@@ -54,42 +54,50 @@ class Game {
 
   addClick() {
     $('ul').click((e)=> {
-      console.log('click', e.target.id)
       let target = e.target
-      let [x, y] = target.id.split(',')
       let a
-      x = parseInt(x)
-      y = parseInt(y)
-      if (this.gravity) {
-        y = -1
-        target = null
-        while (true) {
-          a = this.grid.getItem(x, y+1)
-          if (a && a.innerHTML == '') {
-            y++
-            target = a
-          } else {
-            break;
-          }
-        }
-      }
+      let [x, y] = this.getXY(target)
 
-      if (!target || target.innerHTML != '') return;
+      if (this.gravity) target = this.findNextBlockInColumn(x)
+      if (!this.isVacant(target)) return
 
       let symbol = this.players[this.turn%2].symbol
-      target.className = symbol
-      target.innerHTML = symbol
+      target.className = symbol;
+      target.innerHTML = symbol;
+
+      [x, y] = this.getXY(target);
       if (this.findMatches(x, y)) {
-        console.log('WIN!')
         this.handleWin()
       } else {
-        console.log('no match!')
         if (++this.turn >= this.numTurns) {
           this.gameOver()
         }
       }
 
     })
+  }
+
+  getXY(block) {
+    let [x, y] = block.id.split(',')
+    return [parseInt(x), parseInt(y)]
+  }
+
+  findNextBlockInColumn(x) {
+    let y = -1
+    let block, a
+    while (true) {
+      a = this.grid.getItem(x, y+1)
+      if (this.isVacant(a)) {
+        y++
+        block = a
+      } else {
+        return block
+      }
+    }
+  }
+
+  isVacant(block) {
+    return (block && block.innerHTML == '')
   }
 
   findMatches(x, y) {
@@ -102,13 +110,12 @@ class Game {
   handleWin() {
     $('ul').off()
     let symbol = this.players[this.turn%2].symbol
-    $('#result').addClass(symbol)
+    $('#result')[0].className = symbol
     $('#result').text(`${symbol.toUpperCase()} WINS!`)
     $('#result').show()
   }
 
   gameOver() {
-    console.log('game over man!')
     $('ul').off()
     $('#result').text('DRAW!')
     $('#result').show()
