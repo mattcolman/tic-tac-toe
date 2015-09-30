@@ -1,3 +1,7 @@
+/**
+ * @author Matt Colman
+ */
+
 import {Game} from './game';
 
 var init = function() {
@@ -16,6 +20,10 @@ var init = function() {
       matches: 4,
       gravity: true
     }
+
+    // todo
+    // match3: {
+    // }
   }
 
   var game;

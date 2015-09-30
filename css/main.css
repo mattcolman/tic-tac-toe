@@ -99,3 +99,7 @@ h1 {
 .green:hover {
   background-color: #48E68B;
 }
+
+a {
+    color: #55acee;
+}

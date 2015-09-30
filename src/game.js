@@ -1,3 +1,7 @@
+/**
+ * @author Matt Colman
+ */
+
 import {Grid} from './grid';
 
 class Game {
