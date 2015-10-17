@@ -95,8 +95,8 @@ class Grid {
 
   /**
    * Recursively returns all consecutive matches from an
-   * @public
    * x, y grid position in a direction.
+   * @public
    * @param  {Int} x            x position in the grid
    * @param  {Int} y            y position in the grid
    * @param  {Array} direction  a single direction of the search in Array form e.g [1, 1] goes SE
