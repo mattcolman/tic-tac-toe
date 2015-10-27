@@ -1,6 +1,8 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * @author Matt Colman
+ *
+ * Computer AI player
  */
 
 'use strict';
@@ -10,6 +12,42 @@ exports.__esModule = true;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _grid = require('./grid');
+
+var Computer = (function () {
+  function Computer(grid) {
+    _classCallCheck(this, Computer);
+
+    this.grid = grid;
+  }
+
+  /**
+   * [takeTurn description]
+   * Scan board. Look first for a win. Then look for a block. Then choose a random block.
+   */
+
+  Computer.prototype.takeTurn = function takeTurn() {
+    console.log('computer take turn', this.grid);
+  };
+
+  return Computer;
+})();
+
+exports.Computer = Computer;
+
+},{"./grid":3}],2:[function(require,module,exports){
+/**
+ * @author Matt Colman
+ */
+
+'use strict';
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _grid = require('./grid');
+
+var _computer = require('./computer');
 
 var Game = (function () {
   function Game(config) {
@@ -21,14 +59,30 @@ var Game = (function () {
     this.numMatches = config.matches;
     this.numTurns = this.numRows * this.numColumns;
     this.gravity = config.gravity;
-    this.players = [{ name: 'Player 1', symbol: 'x' }, { name: 'Player 2', symbol: 'o' }];
+    this.players = [{ name: 'Player 1', type: 'human', symbol: 'x' }, { name: 'Player 2', type: 'computer', symbol: 'o' }];
 
     this.createBlocks();
     this.blocks = Array.from($('li')); // convert array-like to array
     this.addGrid();
     this.addClick();
-    $('#result').hide();
+    this.addComputer();
+    this.nextTurn();
   }
+
+  Game.prototype.addComputer = function addComputer() {
+    this.computer = new _computer.Computer(this.grid);
+  };
+
+  Game.prototype.nextTurn = function nextTurn() {
+    var player = this.players[this.turn % 2];
+    $('#result')[0].className = 'white';
+    $('#result').text(player.name + "'s turn");
+    if (player.type == 'human') {
+      this.listenForClick = true;
+    } else {
+      this.computer.takeTurn();
+    }
+  };
 
   Game.prototype.destroy = function destroy() {
     $('ul').off();
@@ -83,33 +137,43 @@ var Game = (function () {
 
     $('ul').click(function (e) {
       var target = e.target;
-      var a = undefined;
-
-      var _getXY = _this.getXY(target);
-
-      var x = _getXY[0];
-      var y = _getXY[1];
-
-      if (_this.gravity) target = _this.findNextBlockInColumn(x);
-      if (!_this.isVacant(target)) return;
-
-      var symbol = _this.players[_this.turn % 2].symbol;
-      target.className = symbol;
-      target.innerHTML = symbol;
-
-      var _getXY2 = _this.getXY(target);
-
-      x = _getXY2[0];
-      y = _getXY2[1];
-
-      if (_this.findMatches(x, y)) {
-        _this.handleWin();
-      } else {
-        if (++_this.turn >= _this.numTurns) {
-          _this.gameOver();
-        }
-      }
+      _this.handleClick(target);
     });
+  };
+
+  Game.prototype.handleClick = function handleClick(target) {
+    var a = undefined;
+
+    var _getXY = this.getXY(target);
+
+    var x = _getXY[0];
+    var y = _getXY[1];
+
+    if (this.gravity) target = this.findNextBlockInColumn(x);
+    if (!this.isVacant(target)) return;
+
+    var symbol = this.players[this.turn % 2].symbol;
+    target.className = symbol;
+    target.innerHTML = symbol;
+
+    var _getXY2 = this.getXY(target);
+
+    x = _getXY2[0];
+    y = _getXY2[1];
+
+    if (this.findMatches(x, y)) {
+      this.handleWin();
+    } else {
+      this.handleTurnComplete();
+    }
+  };
+
+  Game.prototype.handleTurnComplete = function handleTurnComplete() {
+    if (++this.turn >= this.numTurns) {
+      this.gameOver();
+    } else {
+      this.nextTurn();
+    }
   };
 
   Game.prototype.getXY = function getXY(block) {
@@ -149,13 +213,13 @@ var Game = (function () {
     var symbol = this.players[this.turn % 2].symbol;
     $('#result')[0].className = symbol;
     $('#result').text(symbol.toUpperCase() + ' WINS!');
-    $('#result').show();
+    // $('#result').show()
   };
 
   Game.prototype.gameOver = function gameOver() {
     $('ul').off();
     $('#result').text('DRAW!');
-    $('#result').show();
+    // $('#result').show()
   };
 
   return Game;
@@ -163,7 +227,7 @@ var Game = (function () {
 
 exports.Game = Game;
 
-},{"./grid":2}],2:[function(require,module,exports){
+},{"./computer":1,"./grid":3}],3:[function(require,module,exports){
 /**
  * @author Matt Colman
  * This is a generic 2d Grid class.
@@ -346,7 +410,7 @@ var Grid = (function () {
 
 exports.Grid = Grid;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /**
  * @author Matt Colman
  */
@@ -388,4 +452,4 @@ var init = function init() {
 
 init();
 
-},{"./game":1}]},{},[3]);
+},{"./game":2}]},{},[4]);

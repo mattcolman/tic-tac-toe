@@ -3,6 +3,7 @@
  */
 
 import {Grid} from './grid';
+import {Computer} from './computer';
 
 class Game {
 
@@ -14,15 +15,31 @@ class Game {
     this.numTurns   = this.numRows * this.numColumns
     this.gravity    = config.gravity
     this.players = [
-      {name: 'Player 1', symbol: 'x'},
-      {name: 'Player 2', symbol: 'o'}
+      {name: 'Player 1', type: 'human',    symbol: 'x'},
+      {name: 'Player 2', type: 'computer', symbol: 'o'}
     ]
 
     this.createBlocks()
     this.blocks = Array.from($('li')) // convert array-like to array
     this.addGrid()
     this.addClick()
-    $('#result').hide()
+    this.addComputer()
+    this.nextTurn()
+  }
+
+  addComputer() {
+    this.computer = new Computer(this.grid)
+  }
+
+  nextTurn() {
+    let player = this.players[this.turn%2]
+    $('#result')[0].className = 'white'
+    $('#result').text(player.name + "'s turn")
+    if (player.type == 'human') {
+      this.listenForClick = true
+    } else {
+      this.computer.takeTurn()
+    }
   }
 
   destroy() {
@@ -59,26 +76,35 @@ class Game {
   addClick() {
     $('ul').click((e)=> {
       let target = e.target
-      let a
-      let [x, y] = this.getXY(target)
-
-      if (this.gravity) target = this.findNextBlockInColumn(x)
-      if (!this.isVacant(target)) return
-
-      let symbol = this.players[this.turn%2].symbol
-      target.className = symbol;
-      target.innerHTML = symbol;
-
-      [x, y] = this.getXY(target);
-      if (this.findMatches(x, y)) {
-        this.handleWin()
-      } else {
-        if (++this.turn >= this.numTurns) {
-          this.gameOver()
-        }
-      }
-
+      this.handleClick(target)
     })
+  }
+
+  handleClick(target) {
+    let a
+    let [x, y] = this.getXY(target)
+
+    if (this.gravity) target = this.findNextBlockInColumn(x)
+    if (!this.isVacant(target)) return
+
+    let symbol = this.players[this.turn%2].symbol
+    target.className = symbol;
+    target.innerHTML = symbol;
+
+    [x, y] = this.getXY(target);
+    if (this.findMatches(x, y)) {
+      this.handleWin()
+    } else {
+      this.handleTurnComplete()
+    }
+  }
+
+  handleTurnComplete() {
+    if (++this.turn >= this.numTurns) {
+      this.gameOver()
+    } else {
+      this.nextTurn()
+    }
   }
 
   getXY(block) {
@@ -116,13 +142,13 @@ class Game {
     let symbol = this.players[this.turn%2].symbol
     $('#result')[0].className = symbol
     $('#result').text(`${symbol.toUpperCase()} WINS!`)
-    $('#result').show()
+    // $('#result').show()
   }
 
   gameOver() {
     $('ul').off()
     $('#result').text('DRAW!')
-    $('#result').show()
+    // $('#result').show()
   }
 }
 
