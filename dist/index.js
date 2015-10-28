@@ -12382,6 +12382,7 @@ var Computer = {
   listenForClick: function listenForClick(cb) {
     console.log('computer take turn');
     var block = this.chooseMove();
+    // potential here for a delay while computer makes his move
     cb(block);
   },
 
@@ -12390,7 +12391,30 @@ var Computer = {
   // then place your opponents symbol in each block searching for a block
   // if nothing, then place in a random block.
   chooseMove: function chooseMove(cb) {
-    this.emptyBlocks = _lodash._.filter(_lodash._.flatten(this.grid.pos), function (item) {
+    if (this.game.gravity) {
+      // only add the top row to the list if there's gravity
+      this.emptyBlocks = [];
+      for (var _iterator = this.grid.pos, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var arr = _ref;
+
+        this.emptyBlocks.push(arr[0]);
+      }
+    } else {
+      this.emptyBlocks = this.grid.pos;
+    }
+
+    this.emptyBlocks = _lodash._.filter(_lodash._.flatten(this.emptyBlocks), function (item) {
       return item.innerHTML == "";
     });
 
@@ -12429,28 +12453,31 @@ var Computer = {
   },
 
   findPotentialMatch: function findPotentialMatch(symbol) {
-    for (var _iterator = this.emptyBlocks, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
+    for (var _iterator2 = this.emptyBlocks, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
 
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
       } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
       }
 
-      var block = _ref;
+      var block = _ref2;
 
-      $(block).text(symbol);
+      if (this.game.gravity) {
+        // need to find the affected block so we can change it
 
-      var _game$getXY = this.game.getXY(block);
+        var _game$getXY = this.game.getXY(block);
 
-      var x = _game$getXY[0];
-      var y = _game$getXY[1];
+        var x = _game$getXY[0];
+        var y = _game$getXY[1];
 
-      if (this.game.findMatches(x, y)) {
+        block = this.game.findNextBlockInColumn(x);
+      }
+      if (this.game.placeSymbolInBlock(symbol, block)) {
         $(block).text('');
         return block;
       } else {
@@ -12466,6 +12493,7 @@ var Computer = {
 };
 
 exports.Computer = Computer;
+// back to empty after checking
 
 },{"./grid":4,"lodash":1}],3:[function(require,module,exports){
 /**
@@ -12513,7 +12541,7 @@ var Game = (function () {
   };
 
   Game.prototype.addComputer = function addComputer() {
-    return _lodash._.extend(Object.create(_computer.Computer), { name: 'Player 2', symbol: 'o' }).init(this, this.grid);
+    return _lodash._.extend(Object.create(_computer.Computer), { name: 'Arnold', symbol: 'o' }).init(this, this.grid);
   };
 
   Game.prototype.nextTurn = function nextTurn() {
@@ -12522,13 +12550,14 @@ var Game = (function () {
     var player = this.players[this.turn % 2];
     $('#result')[0].className = 'white';
     $('#result').text(player.name + "'s turn");
+    $('ul').off();
     if (player.type == 'human') {
       this.player.listenForClick(function (target) {
-        _this.handleClick(target);
+        _this.handleClick(player.symbol, target);
       });
     } else {
       this.computer.listenForClick(function (target) {
-        _this.handleClick(target);
+        _this.handleClick(player.symbol, target);
       });
     }
   };
@@ -12581,31 +12610,35 @@ var Game = (function () {
     }
   };
 
-  Game.prototype.handleClick = function handleClick(target) {
-    var a = undefined;
-
-    var _getXY = this.getXY(target);
-
-    var x = _getXY[0];
-    var y = _getXY[1];
-
-    if (this.gravity) target = this.findNextBlockInColumn(x);
-    if (!this.isVacant(target)) return;
-
-    var symbol = this.players[this.turn % 2].symbol;
-    target.className = symbol;
-    target.innerHTML = symbol;
-
-    var _getXY2 = this.getXY(target);
-
-    x = _getXY2[0];
-    y = _getXY2[1];
-
-    if (this.findMatches(x, y)) {
+  Game.prototype.handleClick = function handleClick(symbol, block) {
+    if (this.placeSymbolInBlock(symbol, block)) {
       this.handleWin();
     } else {
       this.handleTurnComplete();
     }
+  };
+
+  Game.prototype.placeSymbolInBlock = function placeSymbolInBlock(symbol, block) {
+    var a = undefined;
+
+    var _getXY = this.getXY(block);
+
+    var x = _getXY[0];
+    var y = _getXY[1];
+
+    if (this.gravity) block = this.findNextBlockInColumn(x);
+    if (!this.isVacant(block)) return;
+
+    block.className = symbol;
+    block.innerHTML = symbol;
+
+    var _getXY2 = this.getXY(block);
+
+    x = _getXY2[0];
+    y = _getXY2[1];
+
+    if (this.findMatches(x, y)) return true;
+    return false;
   };
 
   Game.prototype.handleTurnComplete = function handleTurnComplete() {

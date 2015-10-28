@@ -21,6 +21,7 @@ var Computer = {
   listenForClick: function(cb) {
     console.log('computer take turn');
     let block = this.chooseMove()
+    // potential here for a delay while computer makes his move
     cb(block)
   },
 
@@ -29,7 +30,17 @@ var Computer = {
   // then place your opponents symbol in each block searching for a block
   // if nothing, then place in a random block.
   chooseMove: function(cb) {
-    this.emptyBlocks = _.filter(_.flatten(this.grid.pos), function (item) {
+    if (this.game.gravity) {
+      // only add the top row to the list if there's gravity
+      this.emptyBlocks = []
+      for (let arr of this.grid.pos) {
+        this.emptyBlocks.push(arr[0])
+      }
+    } else {
+      this.emptyBlocks = this.grid.pos
+    }
+
+    this.emptyBlocks = _.filter(_.flatten(this.emptyBlocks), function (item) {
       return (item.innerHTML == "")
     });
 
@@ -69,9 +80,13 @@ var Computer = {
 
   findPotentialMatch: function(symbol) {
     for (let block of this.emptyBlocks) {
-      $(block).text(symbol);
-      let [x, y] = this.game.getXY(block);
-      if (this.game.findMatches(x, y)) {
+      if (this.game.gravity) {
+        // need to find the affected block so we can change it
+        // back to empty after checking
+        let [x, y] = this.game.getXY(block)
+        block = this.game.findNextBlockInColumn(x)
+      }
+      if (this.game.placeSymbolInBlock(symbol, block)) {
         $(block).text('');
         return block;
       } else {

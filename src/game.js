@@ -33,20 +33,21 @@ class Game {
   }
 
   addComputer() {
-    return _.extend(Object.create(Computer), {name: 'Player 2', symbol: 'o'}).init(this, this.grid)
+    return _.extend(Object.create(Computer), {name: 'Arnold', symbol: 'o'}).init(this, this.grid)
   }
 
   nextTurn() {
-    let player = this.players[this.turn%2]
+    var player = this.players[this.turn%2]
     $('#result')[0].className = 'white'
     $('#result').text(player.name + "'s turn")
+    $('ul').off()
     if (player.type == 'human') {
       this.player.listenForClick((target)=> {
-        this.handleClick(target)
+        this.handleClick(player.symbol, target)
       })
     } else {
       this.computer.listenForClick((target)=>{
-        this.handleClick(target)
+        this.handleClick(player.symbol, target)
       })
     }
   }
@@ -82,23 +83,27 @@ class Game {
     }
   }
 
-  handleClick(target) {
-    let a
-    let [x, y] = this.getXY(target)
-
-    if (this.gravity) target = this.findNextBlockInColumn(x)
-    if (!this.isVacant(target)) return
-
-    let symbol = this.players[this.turn%2].symbol
-    target.className = symbol;
-    target.innerHTML = symbol;
-
-    [x, y] = this.getXY(target);
-    if (this.findMatches(x, y)) {
+  handleClick(symbol, block) {
+    if (this.placeSymbolInBlock(symbol, block)) {
       this.handleWin()
     } else {
       this.handleTurnComplete()
     }
+  }
+
+  placeSymbolInBlock(symbol, block) {
+    let a
+    let [x, y] = this.getXY(block)
+
+    if (this.gravity) block = this.findNextBlockInColumn(x)
+    if (!this.isVacant(block)) return
+
+    block.className = symbol;
+    block.innerHTML = symbol;
+
+    [x, y] = this.getXY(block);
+    if (this.findMatches(x, y)) return true
+    return false
   }
 
   handleTurnComplete() {
