@@ -29,11 +29,11 @@ class Game {
   }
 
   addPlayer() {
-    return _.extend(Object.create(Player), {name: 'Player 1', symbol: 'x'})
+    return Object.assign(Object.create(Player), {name: 'Player 1', symbol: 'x'})
   }
 
   addComputer() {
-    return _.extend(Object.create(Computer), {name: 'Arnold', symbol: 'o'}).init(this, this.grid)
+    return Object.assign(Object.create(Computer), {name: 'Arnold', symbol: 'o'}).init(this, this.grid)
   }
 
   nextTurn() {

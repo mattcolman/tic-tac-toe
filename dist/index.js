@@ -12537,11 +12537,11 @@ var Game = (function () {
   }
 
   Game.prototype.addPlayer = function addPlayer() {
-    return _lodash._.extend(Object.create(_player.Player), { name: 'Player 1', symbol: 'x' });
+    return Object.assign(Object.create(_player.Player), { name: 'Player 1', symbol: 'x' });
   };
 
   Game.prototype.addComputer = function addComputer() {
-    return _lodash._.extend(Object.create(_computer.Computer), { name: 'Arnold', symbol: 'o' }).init(this, this.grid);
+    return Object.assign(Object.create(_computer.Computer), { name: 'Arnold', symbol: 'o' }).init(this, this.grid);
   };
 
   Game.prototype.nextTurn = function nextTurn() {
