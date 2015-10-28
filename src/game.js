@@ -5,6 +5,7 @@
 import {Grid} from './grid';
 import {Computer} from './computer';
 import {Player} from './player';
+import {_} from 'lodash';
 
 class Game {
 
@@ -15,25 +16,24 @@ class Game {
     this.numMatches = config.matches
     this.numTurns   = this.numRows * this.numColumns
     this.gravity    = config.gravity
-    this.players = [
-      {name: 'Player 1', type: 'human',    symbol: 'x'},
-      {name: 'Player 2', type: 'computer', symbol: 'o'}
-    ]
 
     this.createBlocks()
     this.blocks = Array.from($('li')) // convert array-like to array
     this.addGrid()
-    this.addPlayer()
-    this.addComputer()
+
+    this.player = this.addPlayer()
+    this.computer = this.addComputer()
+    this.players = [this.player, this.computer]
+
     this.nextTurn()
   }
 
   addPlayer() {
-    this.player = new Player()
+    return _.extend(Object.create(Player), {name: 'Player 1', symbol: 'x'})
   }
 
   addComputer() {
-    this.computer = new Computer(this, this.grid)
+    return _.extend(Object.create(Computer), {name: 'Player 2', symbol: 'o'}).init(this, this.grid)
   }
 
   nextTurn() {

@@ -7,46 +7,83 @@
 import {Grid} from './grid';
 import {_} from 'lodash';
 
-class Computer {
+var Computer = {
 
-  constructor(game, grid) {
+  type: 'computer',
+
+  init: function (game, grid) {
     this.game = game;
     this.grid = grid;
-  }
+    this.opponentSymbol = _.without(['x', 'o'], this.symbol)
+    return this;
+  },
 
-  listenForClick(cb) {
+  listenForClick: function(cb) {
     console.log('computer take turn');
-    // get all empty grid squares
-    // first place your own symbol in each empty square searching for a win
-    // then place your opponents symbol in each square searching for a block
-    // if nothing, then place in a random square.
+    let block = this.chooseMove()
+    cb(block)
+  },
 
-    let emptySquares = _.filter(_.flatten(this.grid.pos), function (item) {
+  // get all empty grid blocks
+  // first place your own symbol in each empty block searching for a win
+  // then place your opponents symbol in each block searching for a block
+  // if nothing, then place in a random block.
+  chooseMove: function(cb) {
+    this.emptyBlocks = _.filter(_.flatten(this.grid.pos), function (item) {
       return (item.innerHTML == "")
     });
-    for (let square of emptySquares) {
-      $(square).text('x');
-      let [x, y] = this.game.getXY(square);
-      if (this.game.findMatches(x, y)) {
-        $(square).text('');
-        return cb(square);
+
+    return this.findWinningMove() || this.findBlockingMove() || this.findRandomMove()
+  },
+
+  findWinningMove: function() {
+    let match = this.findPotentialMatch(this.symbol)
+    if (match) {
+      if (this.computerMistake()) {
+        console.log("Computer got distracted and missed the WIN!")
+        match = null
       } else {
-        $(square).text('');
+        console.log("Computer WIN!!")
       }
     }
+    return match
+  },
 
-    return cb(_.shuffle(emptySquares)[0])
+  findBlockingMove: function() {
+    let match = this.findPotentialMatch(this.opponentSymbol)
+    if (match) {
+      if (this.computerMistake()) {
+        console.log("Computer got distracted and missed the block!")
+        match = null
+      } else {
+        console.log("Computer BLOCK!!")
+      }
+    }
+    return match
+  },
+
+  findRandomMove: function() {
+    console.log("Computer RANDOM move")
+    return _.shuffle(this.emptyBlocks)[0]
+  },
+
+  findPotentialMatch: function(symbol) {
+    for (let block of this.emptyBlocks) {
+      $(block).text(symbol);
+      let [x, y] = this.game.getXY(block);
+      if (this.game.findMatches(x, y)) {
+        $(block).text('');
+        return block;
+      } else {
+        $(block).text('');
+      }
+    }
+    return null
+  },
+
+  computerMistake: function() {
+    return Math.random() < .1
   }
-
-  /**
-   * [takeTurn description]
-   * Scan board. Look first for a win. Then look for a block. Then choose a random block.
-   */
-  takeTurn() {
-
-
-  }
-
 }
 
 export {Computer};

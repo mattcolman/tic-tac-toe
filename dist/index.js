@@ -12364,31 +12364,72 @@
 
 exports.__esModule = true;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 var _grid = require('./grid');
 
 var _lodash = require('lodash');
 
-var Computer = (function () {
-  function Computer(game, grid) {
-    _classCallCheck(this, Computer);
+var Computer = {
 
+  type: 'computer',
+
+  init: function init(game, grid) {
     this.game = game;
     this.grid = grid;
-  }
+    this.opponentSymbol = _lodash._.without(['x', 'o'], this.symbol);
+    return this;
+  },
 
-  Computer.prototype.listenForClick = function listenForClick(cb) {
+  listenForClick: function listenForClick(cb) {
     console.log('computer take turn');
-    // get all empty grid squares
-    // first place your own symbol in each empty square searching for a win
-    // then place your opponents symbol in each square searching for a block
-    // if nothing, then place in a random square.
+    var block = this.chooseMove();
+    cb(block);
+  },
 
-    var emptySquares = _lodash._.filter(_lodash._.flatten(this.grid.pos), function (item) {
+  // get all empty grid blocks
+  // first place your own symbol in each empty block searching for a win
+  // then place your opponents symbol in each block searching for a block
+  // if nothing, then place in a random block.
+  chooseMove: function chooseMove(cb) {
+    this.emptyBlocks = _lodash._.filter(_lodash._.flatten(this.grid.pos), function (item) {
       return item.innerHTML == "";
     });
-    for (var _iterator = emptySquares, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+
+    return this.findWinningMove() || this.findBlockingMove() || this.findRandomMove();
+  },
+
+  findWinningMove: function findWinningMove() {
+    var match = this.findPotentialMatch(this.symbol);
+    if (match) {
+      if (this.computerMistake()) {
+        console.log("Computer got distracted and missed the WIN!");
+        match = null;
+      } else {
+        console.log("Computer WIN!!");
+      }
+    }
+    return match;
+  },
+
+  findBlockingMove: function findBlockingMove() {
+    var match = this.findPotentialMatch(this.opponentSymbol);
+    if (match) {
+      if (this.computerMistake()) {
+        console.log("Computer got distracted and missed the block!");
+        match = null;
+      } else {
+        console.log("Computer BLOCK!!");
+      }
+    }
+    return match;
+  },
+
+  findRandomMove: function findRandomMove() {
+    console.log("Computer RANDOM move");
+    return _lodash._.shuffle(this.emptyBlocks)[0];
+  },
+
+  findPotentialMatch: function findPotentialMatch(symbol) {
+    for (var _iterator = this.emptyBlocks, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
 
       if (_isArray) {
@@ -12400,35 +12441,29 @@ var Computer = (function () {
         _ref = _i.value;
       }
 
-      var square = _ref;
+      var block = _ref;
 
-      $(square).text('x');
+      $(block).text(symbol);
 
-      var _game$getXY = this.game.getXY(square);
+      var _game$getXY = this.game.getXY(block);
 
       var x = _game$getXY[0];
       var y = _game$getXY[1];
 
       if (this.game.findMatches(x, y)) {
-        $(square).text('');
-        return cb(square);
+        $(block).text('');
+        return block;
       } else {
-        $(square).text('');
+        $(block).text('');
       }
     }
+    return null;
+  },
 
-    return cb(_lodash._.shuffle(emptySquares)[0]);
-  };
-
-  /**
-   * [takeTurn description]
-   * Scan board. Look first for a win. Then look for a block. Then choose a random block.
-   */
-
-  Computer.prototype.takeTurn = function takeTurn() {};
-
-  return Computer;
-})();
+  computerMistake: function computerMistake() {
+    return Math.random() < .1;
+  }
+};
 
 exports.Computer = Computer;
 
@@ -12449,6 +12484,8 @@ var _computer = require('./computer');
 
 var _player = require('./player');
 
+var _lodash = require('lodash');
+
 var Game = (function () {
   function Game(config) {
     _classCallCheck(this, Game);
@@ -12459,22 +12496,24 @@ var Game = (function () {
     this.numMatches = config.matches;
     this.numTurns = this.numRows * this.numColumns;
     this.gravity = config.gravity;
-    this.players = [{ name: 'Player 1', type: 'human', symbol: 'x' }, { name: 'Player 2', type: 'computer', symbol: 'o' }];
 
     this.createBlocks();
     this.blocks = Array.from($('li')); // convert array-like to array
     this.addGrid();
-    this.addPlayer();
-    this.addComputer();
+
+    this.player = this.addPlayer();
+    this.computer = this.addComputer();
+    this.players = [this.player, this.computer];
+
     this.nextTurn();
   }
 
   Game.prototype.addPlayer = function addPlayer() {
-    this.player = new _player.Player();
+    return _lodash._.extend(Object.create(_player.Player), { name: 'Player 1', symbol: 'x' });
   };
 
   Game.prototype.addComputer = function addComputer() {
-    this.computer = new _computer.Computer(this, this.grid);
+    return _lodash._.extend(Object.create(_computer.Computer), { name: 'Player 2', symbol: 'o' }).init(this, this.grid);
   };
 
   Game.prototype.nextTurn = function nextTurn() {
@@ -12628,7 +12667,7 @@ var Game = (function () {
 
 exports.Game = Game;
 
-},{"./computer":2,"./grid":4,"./player":6}],4:[function(require,module,exports){
+},{"./computer":2,"./grid":4,"./player":6,"lodash":1}],4:[function(require,module,exports){
 /**
  * @author Matt Colman
  * This is a generic 2d Grid class.
@@ -12864,26 +12903,21 @@ init();
 
 exports.__esModule = true;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 var _grid = require('./grid');
 
 var _lodash = require('lodash');
 
-var Player = (function () {
-  function Player() {
-    _classCallCheck(this, Player);
-  }
+var Player = {
 
-  Player.prototype.listenForClick = function listenForClick(cb) {
+  type: 'human',
+
+  listenForClick: function listenForClick(cb) {
     $('ul').click(function (e) {
       var target = e.target;
       cb(target);
     });
-  };
-
-  return Player;
-})();
+  }
+};
 
 exports.Player = Player;
 

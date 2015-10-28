@@ -7,12 +7,11 @@
 import {Grid} from './grid';
 import {_} from 'lodash';
 
-class Player {
+var Player = {
 
-  constructor() {
-  }
+  type: 'human',
 
-  listenForClick(cb) {
+  listenForClick: function (cb) {
     $('ul').click((e)=> {
       let target = e.target
       cb(target)
