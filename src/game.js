@@ -4,6 +4,7 @@
 
 import {Grid} from './grid';
 import {Computer} from './computer';
+import {Player} from './player';
 
 class Game {
 
@@ -22,13 +23,17 @@ class Game {
     this.createBlocks()
     this.blocks = Array.from($('li')) // convert array-like to array
     this.addGrid()
-    this.addClick()
+    this.addPlayer()
     this.addComputer()
     this.nextTurn()
   }
 
+  addPlayer() {
+    this.player = new Player()
+  }
+
   addComputer() {
-    this.computer = new Computer(this.grid)
+    this.computer = new Computer(this, this.grid)
   }
 
   nextTurn() {
@@ -36,9 +41,13 @@ class Game {
     $('#result')[0].className = 'white'
     $('#result').text(player.name + "'s turn")
     if (player.type == 'human') {
-      this.listenForClick = true
+      this.player.listenForClick((target)=> {
+        this.handleClick(target)
+      })
     } else {
-      this.computer.takeTurn()
+      this.computer.listenForClick((target)=>{
+        this.handleClick(target)
+      })
     }
   }
 
@@ -71,13 +80,6 @@ class Game {
       let [x, y] = li.id.split(',')
       this.grid.setItem(x, y, li)
     }
-  }
-
-  addClick() {
-    $('ul').click((e)=> {
-      let target = e.target
-      this.handleClick(target)
-    })
   }
 
   handleClick(target) {
