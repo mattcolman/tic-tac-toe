@@ -3,6 +3,9 @@
  */
 
 import {Grid} from './grid';
+import {Computer} from './computer';
+import {Player} from './player';
+import {_} from 'lodash';
 
 class Game {
 
@@ -13,16 +16,40 @@ class Game {
     this.numMatches = config.matches
     this.numTurns   = this.numRows * this.numColumns
     this.gravity    = config.gravity
-    this.players = [
-      {name: 'Player 1', symbol: 'x'},
-      {name: 'Player 2', symbol: 'o'}
-    ]
 
     this.createBlocks()
     this.blocks = Array.from($('li')) // convert array-like to array
     this.addGrid()
-    this.addClick()
-    $('#result').hide()
+
+    this.player = this.addPlayer()
+    this.computer = this.addComputer()
+    this.players = [this.player, this.computer]
+
+    this.nextTurn()
+  }
+
+  addPlayer() {
+    return Object.assign(Object.create(Player), {name: 'Player 1', symbol: 'x'})
+  }
+
+  addComputer() {
+    return Object.assign(Object.create(Computer), {name: 'Arnold', symbol: 'o'}).init(this, this.grid)
+  }
+
+  nextTurn() {
+    var player = this.players[this.turn%2]
+    $('#result')[0].className = 'white'
+    $('#result').text(player.name + "'s turn")
+    $('ul').off()
+    if (player.type == 'human') {
+      this.player.listenForClick((target)=> {
+        this.handleClick(player.symbol, target)
+      })
+    } else {
+      this.computer.listenForClick((target)=>{
+        this.handleClick(player.symbol, target)
+      })
+    }
   }
 
   destroy() {
@@ -56,29 +83,35 @@ class Game {
     }
   }
 
-  addClick() {
-    $('ul').click((e)=> {
-      let target = e.target
-      let a
-      let [x, y] = this.getXY(target)
+  handleClick(symbol, block) {
+    if (this.placeSymbolInBlock(symbol, block)) {
+      this.handleWin()
+    } else {
+      this.handleTurnComplete()
+    }
+  }
 
-      if (this.gravity) target = this.findNextBlockInColumn(x)
-      if (!this.isVacant(target)) return
+  placeSymbolInBlock(symbol, block) {
+    let a
+    let [x, y] = this.getXY(block)
 
-      let symbol = this.players[this.turn%2].symbol
-      target.className = symbol;
-      target.innerHTML = symbol;
+    if (this.gravity) block = this.findNextBlockInColumn(x)
+    if (!this.isVacant(block)) return
 
-      [x, y] = this.getXY(target);
-      if (this.findMatches(x, y)) {
-        this.handleWin()
-      } else {
-        if (++this.turn >= this.numTurns) {
-          this.gameOver()
-        }
-      }
+    block.className = symbol;
+    block.innerHTML = symbol;
 
-    })
+    [x, y] = this.getXY(block);
+    if (this.findMatches(x, y)) return true
+    return false
+  }
+
+  handleTurnComplete() {
+    if (++this.turn >= this.numTurns) {
+      this.gameOver()
+    } else {
+      this.nextTurn()
+    }
   }
 
   getXY(block) {
@@ -116,13 +149,13 @@ class Game {
     let symbol = this.players[this.turn%2].symbol
     $('#result')[0].className = symbol
     $('#result').text(`${symbol.toUpperCase()} WINS!`)
-    $('#result').show()
+    // $('#result').show()
   }
 
   gameOver() {
     $('ul').off()
     $('#result').text('DRAW!')
-    $('#result').show()
+    // $('#result').show()
   }
 }
 

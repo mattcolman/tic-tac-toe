@@ -51,6 +51,10 @@ h1 {
     color: #51d33c;
 }
 
+.white {
+    color: #ffffff;
+}
+
 #game > li:hover {
     background: #f9f9f9;
 }
